@@ -80,12 +80,11 @@ namespace GetPPPIP
         //
         private static string fGetServerIP()
         {
+
+
             string sServerIP = "";
             bool bConnectionFound = false;
             string[] saAddress;
-
-            
-
             var vNics = NetworkInterface.GetAllNetworkInterfaces();
 
             foreach (var nic in vNics)
@@ -112,13 +111,22 @@ namespace GetPPPIP
                 }
                 
             }
+            
             if (bConnectionFound == true)
             {
                 return sServerIP;
             }
             else
             {
-                return "";
+                sServerIP = fGetOpenPort();
+                if (sServerIP == "")
+                {
+                    return "";
+                }
+                else
+                {
+                    return sServerIP;
+                }
             }
         }
 
@@ -446,6 +454,55 @@ namespace GetPPPIP
             }
             File.WriteAllText(sNewFileName, newFile.ToString());
             
+        }
+
+        private static string fGetOpenPort()
+        {
+            int PortStartIndex = 22;
+            int PortEndIndex = 22;
+            IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
+            IPEndPoint[] tcpEndPoints = properties.GetActiveTcpListeners();
+
+            List<string> lsIP_Addresses = tcpEndPoints.Select(p => p.Address.ToString()).ToList<string>();
+            List<string> lsPortNumbers = tcpEndPoints.Select(p => p.Port.ToString()).ToList<string>();
+            int unusedPort = 0;
+
+            int i = 0;
+            bool bSALFound = false;
+            string sSalIP = "";
+            while (i < lsIP_Addresses.Count)
+            {
+                if (lsIP_Addresses[i] == "127.0.0.1")
+                {
+                    if (lsPortNumbers[i] == "22")
+                    {
+                        bSALFound = true;
+                        sSalIP = "127.0.0.1";
+                        break;
+                    }
+
+                }
+                i++;
+            }
+            if (bSALFound == true)
+            {
+                return sSalIP;
+            }
+            else
+            {
+                return "";
+            }
+            /*
+            for (int port = PortStartIndex; port < PortEndIndex; port++)
+            {
+                if (!usedPorts.Contains(port))
+                {
+                    unusedPort = port;
+                    break;
+                }
+            }
+            return unusedPort.ToString();
+             */
         }
     }
 }
