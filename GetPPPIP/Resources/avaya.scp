@@ -1,0 +1,55 @@
+; This Script Modified by Devin Blabrough (dblagbro@earthlink.net)
+; to be used with Avaya products requireing RAS to connect.
+;
+;First save this file as "C:WINDOWSsystem32
+;asAvaya_ppp_after-dial.scp"
+; if "C" is the drive with Windows installed on it.
+;
+;Then save the username and password in the Window's dial-up networking
+; entry, select the 'security' tab in its properties, and select
+; the "Show terminal window" and "Run Script" using this script file.
+;
+;You also must save the username and password in the dial-up entry. In the
+; entry's options select "prompt for name, password, certificates, etc" and
+; the first time you connect you can save the username & PW for future use.
+; Main entry point to script
+;
+proc main
+integer nTries = 3
+string sUserID = "remote"
+string sPassword = "remote0197"
+string szLogin = "login:"
+integer nLoginTimeout = 3
+string szPW = "password:"
+integer nPWTimeout = 3
+boolean bUseSlip = FALSE
+delay 2
+transmit "^M^M"
+while 0 < nTries do
+waitfor szLogin then DoLogin
+until nLoginTimeout
+TryAgain:
+transmit "^M" ; ping
+nTries = nTries - 1
+endwhile
+
+goto BailOut
+DoLogin:
+transmit sUserID, raw
+transmit "^M"
+waitfor szPW until nPWTimeout
+if FALSE == $SUCCESS then
+goto TryAgain
+endif
+transmit sPassword, raw
+transmit "^M"
+if bUseSlip then
+set ipaddr getip 2
+endif
+
+goto Done
+BailOut:
+set screen keyboard on
+halt
+Done:
+endproc
